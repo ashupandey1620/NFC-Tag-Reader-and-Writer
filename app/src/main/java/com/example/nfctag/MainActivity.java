@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
         readfromIntent(getIntent());
 
-        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE);
 
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
 
@@ -194,6 +194,14 @@ public class MainActivity extends AppCompatActivity {
         int langLength = langBytes.length;
 
         byte[] payload = new byte[langLength+textLength+1];
+
+        payload[0] = (byte) langLength;
+
+
+        System.arraycopy(langBytes,0,payload,1,langLength);
+        System.arraycopy(textBytes,0,payload,1+langLength,textLength);
+
+        NdefRecord recordNfc = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0],payload);
 
         return recordNfc;
     }
