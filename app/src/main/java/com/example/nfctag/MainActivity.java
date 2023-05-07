@@ -23,7 +23,8 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+{
 
 
     public static final String error_detected = "NFC tag not detected";
@@ -45,32 +46,39 @@ public class MainActivity extends AppCompatActivity {
     Button write_button;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        //TextViews
         edit_Msg = (TextView) findViewById(R.id.editMsg);
         nfc_Content = (TextView) findViewById(R.id.nfcContent);
         //Button
         write_button = findViewById(R.id.writeButton);
 
-
+//default as this
         context = this;
 
-        write_button.setOnClickListener(new View.OnClickListener() {
+        write_button.setOnClickListener(new View.OnClickListener()
+        {
+
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
 
                 try {
-                    if (myTag == null) {
+                    if (myTag == null)
+                    {
                         Toast.makeText(context, error_detected, Toast.LENGTH_LONG).show();
-                    } else {
-                        write("PlainText|" + edit_Msg.getText().toString(), myTag);
+                    } else{
+                        write(" " + edit_Msg.getText().toString(), myTag);
                         Toast.makeText(context, success_on_writing, Toast.LENGTH_LONG).show();
                     }
-                } catch (IOException | FormatException e) {
+                }
+                catch (IOException e) {
+                    Toast.makeText(context, error_on_writing, Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+                catch (FormatException e) {
                     Toast.makeText(context, error_on_writing, Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
@@ -78,16 +86,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        if (nfcAdapter == null) {
-            Toast.makeText(this, "Mobile phone do not support NFC", Toast.LENGTH_LONG).show();
-            finish();
-        }
 
 
-        readfromIntent(getIntent());
 
-        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE);
+
+
+        // Check for available NFC Adapter
+
+
+
+
+
+
+        readFromIntent(getIntent());
+
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
 
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
 
@@ -97,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void readfromIntent(Intent intent) {
+    private void readFromIntent(Intent intent) {
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
                 || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
@@ -132,13 +145,35 @@ public class MainActivity extends AppCompatActivity {
         nfc_Content.setText("NFC CONTENT : "+text);
     }
 
+    private void write(String text,Tag tag) throws IOException, FormatException{
+        NdefRecord[] records = {createRecord(text)};
+        NdefMessage message = new  NdefMessage(records);
+        /**
+         * get An Instance for the Ndef of the Tag
+         */
+        Ndef ndef  = Ndef.get(tag);
+        /**
+         * Enable I/O Operation
+         */
+        ndef.connect();
+        /**
+         * write the message
+         */
+        ndef.writeNdefMessage(message);
+        /**
+         * close the connection
+          */
+        ndef.close();
+
+    }
+
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        readfromIntent(intent);
+        readFromIntent(intent);
         if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
-            Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         }
     }
 
@@ -160,36 +195,37 @@ public class MainActivity extends AppCompatActivity {
     private void writeModeOn()
     {
         writeMode=true;
+
+        if (nfcAdapter == null)
+        {
+            nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        }
         nfcAdapter.enableForegroundDispatch(this,pendingIntent,writingTagFilters,null);
     }
 
     //Disabling write function
     private void writeModeOff(){
         writeMode=false;
+        if (nfcAdapter == null)
+        {
+            nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        }
         nfcAdapter.disableForegroundDispatch(this);
     }
 
 
 
-    private void write(String text,Tag tag) throws IOException, FormatException{
-        NdefRecord[] records = {createRecord(text)};
-        NdefMessage message = new  NdefMessage(records);
-        Ndef ndef  = Ndef.get(tag);
-        ndef.connect();
-        ndef.writeNdefMessage(message);
-        ndef.close();
 
-    }
 
     private NdefRecord createRecord(String text)throws UnsupportedEncodingException{
         String lang = "en";
         byte[] textBytes = text.getBytes();
-        byte[] langBytes = lang.getBytes();
+        byte[] langBytes = lang.getBytes("US-ASCII");
 
         int textLength = textBytes.length;
         int langLength = langBytes.length;
 
-        byte[] payload = new byte[langLength+textLength+1];
+        byte[] payload = new byte[ langLength + textLength + 1];
 
         payload[0] = (byte) langLength;
 
@@ -197,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         System.arraycopy(langBytes,0,payload,1,langLength);
         System.arraycopy(textBytes,0,payload,1+langLength,textLength);
 
-        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0],payload);
+        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT,new byte[0],payload);
     }
 
 }
