@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -134,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         nfc_Content.setText("NFC CONTENT : "+text);
     }
 
+    @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
@@ -142,4 +145,45 @@ public class MainActivity extends AppCompatActivity {
             Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         }
     }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        writeModeOff();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        writeModeOn();
+    }
+
+    //Enabling Write function
+    private void writeModeOn()
+    {
+        writeMode=true;
+        nfcAdapter.enableForegroundDispatch(this,pendingIntent,writingTagFilters,null);
+    }
+
+    //Disabling write function
+    private void writeModeOff(){
+        writeMode=false;
+        nfcAdapter.disableForegroundDispatch(this);
+    }
+
+
+
+    private void write(String text,Tag tag) throws IOException, FormatException{
+        NdefRecord[] records = {createRecord(text)};
+        NdefMessage message = new  NdefMessage(records);
+        Ndef ndef  = Ndef.get(tag);
+        ndef.connect();
+        ndef.writeNdefMessage(message);
+        ndef.close();
+
+    }
+
+
 }
