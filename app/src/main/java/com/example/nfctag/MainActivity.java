@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     PendingIntent pendingIntent;
     NfcAdapter nfcAdapter;
-    IntentFilter writingTagFilters[];
+    IntentFilter[] writingTagFilters;
 
     boolean writeMode;
 
@@ -70,10 +70,7 @@ public class MainActivity extends AppCompatActivity {
                         write("PlainText|" + edit_Msg.getText().toString(), myTag);
                         Toast.makeText(context, success_on_writing, Toast.LENGTH_LONG).show();
                     }
-                } catch (IOException e) {
-                    Toast.makeText(context, error_on_writing, Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                } catch (FormatException e) {
+                } catch (IOException | FormatException e) {
                     Toast.makeText(context, error_on_writing, Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
@@ -119,8 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void buildTagViews(NdefMessage[] msgs) {
         if (msgs == null || msgs.length == 0) return;
-
-         String text = "";
+        String text = "";
 //        String tagId = new String(msgs[0].getRecords()[0].getType());
         byte[] payload = msgs[0].getRecords()[0].getPayload();
         String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
@@ -141,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         readfromIntent(intent);
-        if(nfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
+        if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
             Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         }
     }
@@ -201,9 +197,7 @@ public class MainActivity extends AppCompatActivity {
         System.arraycopy(langBytes,0,payload,1,langLength);
         System.arraycopy(textBytes,0,payload,1+langLength,textLength);
 
-        NdefRecord recordNfc = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0],payload);
-
-        return recordNfc;
+        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, new byte[0],payload);
     }
 
 }
