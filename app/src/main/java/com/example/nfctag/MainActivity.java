@@ -185,5 +185,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private NdefRecord createRecord(String text)throws UnsupportedEncodingException{
+        String lang = "en";
+        byte[] textBytes = text.getBytes();
+        byte[] langBytes = lang.getBytes();
+
+        int textLength = textBytes.length;
+        int langLength = langBytes.length;
+
+        byte[] payload = new byte[langLength+textLength+1];
+
+        return recordNfc;
+    }
 
 }
