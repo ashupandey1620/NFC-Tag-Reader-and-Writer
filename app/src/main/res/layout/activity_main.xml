@@ -21,17 +21,29 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:layout_marginTop="20sp"
+
     >
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/editMsg"
+        android:layout_weight="2"
+        android:hint="Type Write Word..."
 
         />
     <Button
+        android:text="Write"
+        android:layout_weight="1"
         android:layout_width="wrap_content"
+        android:id="@+id/writeButton"
         android:layout_height="wrap_content"
         />
 </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/nfcContent"
+        />
 
 </LinearLayout>
